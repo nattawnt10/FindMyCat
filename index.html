@@ -1,147 +1,274 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ตามหาแมว ศรีสะเกษ 🐾</title>
-    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap" rel="stylesheet">
-    
-    <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-storage-compat.js"></script>
-
-    <style>
-        /* นำ CSS เดิมของคุณมาใส่ตรงนี้ (ผมย่อไว้เพื่อให้ประหยัดเนื้อหาแชท) */
-        :root { --cream: #FFF8F0; --warm: #FFF0DC; --lost: #FF4F4F; --found: #4CAF50; --text: #2B1A0A; }
-        body { background: var(--cream); font-family: 'Sarabun', sans-serif; margin: 0; padding-bottom: 50px; }
-        .header { background: #fff; padding: 20px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        .card-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; padding: 20px; }
-        .card { background: #fff; border-radius: 15px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); transition: 0.3s; }
-        .card img { width: 100%; height: 200px; object-fit: cover; }
-        .card-content { padding: 15px; }
-        .btn-post { position: fixed; bottom: 20px; right: 20px; background: var(--lost); color: #fff; border: none; padding: 15px 25px; border-radius: 30px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(255,79,79,0.4); z-index: 100; }
-        /* สไตล์อื่นๆ จากโค้ดเดิมของคุณ... */
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>แมวหาย · แมวหลง</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Sarabun', 'Helvetica Neue', sans-serif; background: #faf8f5; }
+    .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; animation: fadeIn .4s ease; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
+    @keyframes pulse { 0%,100%{transform:scale(1)}50%{transform:scale(1.08)} }
+    .cat-card { transition: transform .2s, box-shadow .2s; }
+    .cat-card:hover { transform: translateY(-4px); box-shadow: 0 12px 36px rgba(0,0,0,0.13) !important; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-thumb { background: #ddd; border-radius: 4px; }
+  </style>
 </head>
 <body>
+  <div id="root"></div>
 
-    <div class="header">
-        <h1>🐾 ตามหาแมว ศรีสะเกษ</h1>
-        <p>ศูนย์รวมแจ้งแมวหาย-แมวหลง ในจังหวัดศรีสะเกษ</p>
-    </div>
+  <script type="text/babel">
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxPfsJBMY8oG48iCULytHU6lNxDZ1R6kNkDgmJqX57c1VIf6TrroNNSrh4LQrfzn87AGQ/exec";
 
-    <div id="app" class="card-container">
-        <p style="text-align: center; grid-column: 1/-1;">กำลังโหลดข้อมูลจากระบบ...</p>
-    </div>
+    const MOCK_CATS = [
+      { id:1, type:"หาย", breed:"เปอร์เซีย", name:"มูมู่", location:"ลาดพร้าว 71, กรุงเทพฯ", features:"ขนสีขาวล้วน ตาสีฟ้า คอมีโบว์สีชมพู", contact:"081-234-5678", approved:"TRUE", date:"2026-05-08", img:"https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=400&q=80" },
+      { id:2, type:"หลง", breed:"อเมริกันช็อตแฮร์", name:"ไม่ทราบ", location:"สุขุมวิท 39, กรุงเทพฯ", features:"ลายส้ม-ขาว หางยาว ไม่มีปลอกคอ", contact:"089-876-5432", approved:"TRUE", date:"2026-05-09", img:"https://images.unsplash.com/photo-1573865526739-10659fec78a5?w=400&q=80" },
+    ];
 
-    <button class="btn-post" onclick="document.getElementById('postModal').style.display='flex'">+ ลงประกาศใหม่</button>
+    const typeColor = t => t === "หาย" ? "#FF6B6B" : "#4ECDC4";
+    const typeBg = t => t === "หาย" ? "#FFF0F0" : "#F0FFFE";
 
-    <div id="postModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:1000; justify-content:center; align-items:center;">
-        <div style="background:#fff; padding:25px; border-radius:15px; width:90%; max-width:500px; max-height:90vh; overflow-y:auto;">
-            <h2>ลงประกาศ</h2>
-            <input type="text" id="catName" placeholder="ชื่อแมว" style="width:100%; margin:10px 0; padding:10px;">
-            <input type="text" id="catBreed" placeholder="พันธุ์/ลักษณะ" style="width:100%; margin:10px 0; padding:10px;">
-            <input type="text" id="catPhone" placeholder="เบอร์โทรติดต่อ" style="width:100%; margin:10px 0; padding:10px;">
-            <textarea id="catDetail" placeholder="รายละเอียด/สถานที่หาย" style="width:100%; margin:10px 0; padding:10px; height:100px;"></textarea>
-            <p>เลือกรูปภาพ:</p>
-            <input type="file" id="catImage" accept="image/*" style="margin-bottom:20px;">
-            <div style="display:flex; gap:10px;">
-                <button onclick="saveToFirebase()" id="btnSubmit" style="background:var(--found); color:#fff; border:none; padding:10px 20px; border-radius:5px; flex:1;">บันทึกประกาศ</button>
-                <button onclick="document.getElementById('postModal').style.display='none'" style="background:#ccc; border:none; padding:10px 20px; border-radius:5px;">ยกเลิก</button>
+    const { useState, useEffect } = React;
+
+    function Badge({ type }) {
+      return <span style={{ background: typeColor(type), color: "#fff", borderRadius: 20, padding: "3px 12px", fontSize: 12, fontWeight: 700 }}>{type}</span>;
+    }
+
+    function CatCard({ cat, onApprove, onReject, adminMode }) {
+      return (
+        <div className="cat-card" style={{ background: "#fff", borderRadius: 20, overflow: "hidden", boxShadow: "0 4px 24px rgba(0,0,0,0.08)", border: `2px solid ${cat.approved === "TRUE" ? typeColor(cat.type) : "#e0e0e0"}`, display: "flex", flexDirection: "column" }}>
+          <div style={{ position: "relative" }}>
+            <img src={cat.img || "https://images.unsplash.com/photo-1518791841217-8f162f1912da?w=400&q=80"} alt={cat.name} style={{ width: "100%", height: 200, objectFit: "cover" }} />
+            <div style={{ position: "absolute", top: 12, left: 12 }}><Badge type={cat.type} /></div>
+            {adminMode && cat.approved !== "TRUE" && (
+              <div style={{ position: "absolute", top: 12, right: 12, background: "#FFA500", color: "#fff", borderRadius: 20, padding: "3px 10px", fontSize: 11, fontWeight: 700 }}>รอตรวจสอบ</div>
+            )}
+          </div>
+          <div style={{ padding: "16px 18px", flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ fontWeight: 800, fontSize: 18, color: "#2d2d2d" }}>{cat.name || "ไม่ทราบชื่อ"}</span>
+              <span style={{ fontSize: 12, color: "#aaa" }}>{cat.date}</span>
             </div>
+            <div style={{ fontSize: 13, color: "#777" }}>🐱 {cat.breed}</div>
+            <div style={{ fontSize: 13, color: "#555" }}>📍 {cat.location}</div>
+            <div style={{ fontSize: 13, color: "#444", background: typeBg(cat.type), borderRadius: 8, padding: "6px 10px", marginTop: 4, lineHeight: 1.6 }}>✨ {cat.features}</div>
+            <div style={{ marginTop: "auto", paddingTop: 10, borderTop: "1px solid #f0f0f0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <a href={`tel:${cat.contact}`} style={{ fontWeight: 700, color: typeColor(cat.type), textDecoration: "none", fontSize: 14 }}>📞 {cat.contact}</a>
+              {adminMode && (
+                <div style={{ display: "flex", gap: 6 }}>
+                  {cat.approved !== "TRUE" && <button onClick={() => onApprove(cat)} style={{ background: "#4CAF50", color: "#fff", border: "none", borderRadius: 8, padding: "5px 12px", cursor: "pointer", fontSize: 12, fontWeight: 700 }}>✓ อนุมัติ</button>}
+                  <button onClick={() => onReject(cat)} style={{ background: "#FF6B6B", color: "#fff", border: "none", borderRadius: 8, padding: "5px 12px", cursor: "pointer", fontSize: 12, fontWeight: 700 }}>✕ ลบ</button>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
-    </div>
+      );
+    }
 
-    <script>
-        // --- ส่วนที่ 1: เชื่อมต่อ Firebase (ใช้ข้อมูลจากโปรเจกต์ของคุณ) ---
-        const firebaseConfig = {
-            apiKey: "AIzaSyAr3QraUwNdD4RtA7nylSdBywHYLON8Emk",
-            authDomain: "findmycat-40997.firebaseapp.com",
-            projectId: "findmycat-40997",
-            storageBucket: "findmycat-40997.appspot.com",
-            messagingSenderId: "696565732757",
-            appId: "1:696565732757:web:6baab7b78235819232529c"
-        };
+    function SubmitForm({ onSubmit, onClose, loading }) {
+      const [form, setForm] = useState({ type: "หาย", breed: "", name: "", location: "", features: "", contact: "", img: "" });
+      const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+      const handle = () => {
+        if (!form.breed || !form.location || !form.contact) { alert("กรุณากรอกข้อมูลให้ครบ (สายพันธุ์, สถานที่, เบอร์ติดต่อ)"); return; }
+        onSubmit(form);
+      };
+      const inp = { width: "100%", padding: "10px 12px", borderRadius: 10, border: "1.5px solid #e0e0e0", fontSize: 14, outline: "none", fontFamily: "Sarabun, sans-serif" };
+      return (
+        <div onClick={e => e.target === e.currentTarget && onClose()} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 999, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+          <div style={{ background: "#fff", borderRadius: 24, padding: 28, width: "100%", maxWidth: 480, maxHeight: "90vh", overflowY: "auto", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
+            <h2 style={{ margin: "0 0 20px", color: "#2d2d2d" }}>📝 แจ้งแมว{form.type}</h2>
+            <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+              {["หาย", "หลง"].map(t => (
+                <button key={t} onClick={() => set("type", t)} style={{ flex: 1, padding: 10, borderRadius: 10, border: `2px solid ${form.type===t?typeColor(t):"#e0e0e0"}`, background: form.type===t?typeBg(t):"#fff", fontWeight: 700, cursor: "pointer", color: form.type===t?typeColor(t):"#888", fontFamily: "Sarabun, sans-serif", fontSize: 14 }}>
+                  {t === "หาย" ? "😿 แมวหาย" : "🐾 เจอแมวหลง"}
+                </button>
+              ))}
+            </div>
+            {[["name", form.type==="หาย"?"ชื่อแมว":"ชื่อแมว (ถ้าทราบ)"],["breed","สายพันธุ์ *"],["location","สถานที่พบ/หาย *"],["features","ลักษณะเด่น"],["contact","เบอร์ติดต่อ *"],["img","URL รูปภาพ (ถ้ามี)"]].map(([k, label]) => (
+              <div key={k} style={{ marginBottom: 12 }}>
+                <label style={{ fontSize: 13, color: "#666", display: "block", marginBottom: 4 }}>{label}</label>
+                <input style={inp} value={form[k]} onChange={e => set(k, e.target.value)} placeholder={label} />
+              </div>
+            ))}
+            <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+              <button onClick={onClose} style={{ flex: 1, padding: 12, borderRadius: 10, border: "1.5px solid #ddd", background: "#fff", cursor: "pointer", fontWeight: 600, fontFamily: "Sarabun, sans-serif", fontSize: 14 }}>ยกเลิก</button>
+              <button onClick={handle} disabled={loading} style={{ flex: 2, padding: 12, borderRadius: 10, border: "none", background: loading?"#ccc":typeColor(form.type), color: "#fff", cursor: loading?"not-allowed":"pointer", fontWeight: 700, fontSize: 15, fontFamily: "Sarabun, sans-serif" }}>
+                {loading ? "⏳ กำลังส่ง..." : "ส่งข้อมูล"}
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
 
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-        const storage = firebase.storage();
+    function App() {
+      const [page, setPage] = useState("home");
+      const [cats, setCats] = useState(MOCK_CATS);
+      const [filter, setFilter] = useState("ทั้งหมด");
+      const [showForm, setShowForm] = useState(false);
+      const [search, setSearch] = useState("");
+      const [adminPass, setAdminPass] = useState("");
+      const [adminAuthed, setAdminAuthed] = useState(false);
+      const [toast, setToast] = useState(null);
+      const [submitting, setSubmitting] = useState(false);
+      const [loadingData, setLoadingData] = useState(false);
 
-        // --- ส่วนที่ 2: ฟังก์ชันดึงข้อมูลมาแสดงผล (Real-time) ---
-        function loadCats() {
-            db.collection("cats").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
-                const app = document.getElementById('app');
-                app.innerHTML = '';
-                if (snapshot.empty) {
-                    app.innerHTML = '<p style="text-align: center; grid-column: 1/-1;">ยังไม่มีประกาศในขณะนี้</p>';
-                    return;
-                }
-                snapshot.forEach((doc) => {
-                    const cat = doc.data();
-                    app.innerHTML += `
-                        <div class="card">
-                            <img src="${cat.imageUrl || 'https://via.placeholder.com/300x200?text=No+Image'}" alt="แมว">
-                            <div class="card-content">
-                                <h3 style="color:var(--lost)">${cat.name} (${cat.breed})</h3>
-                                <p>📍 ${cat.detail}</p>
-                                <p>📞 ติดต่อ: <strong>${cat.phone}</strong></p>
-                                <small style="color:#999">${new Date(cat.timestamp?.toDate()).toLocaleString('th-TH')}</small>
-                            </div>
-                        </div>
-                    `;
-                });
-            });
-        }
+      const notify = (msg, color="#4CAF50") => { setToast({msg,color}); setTimeout(()=>setToast(null),3500); };
 
-        // --- ส่วนที่ 3: ฟังก์ชันบันทึกข้อมูล (อัพโหลดรูป + บันทึกข้อความ) ---
-        async function saveToFirebase() {
-            const name = document.getElementById('catName').value;
-            const breed = document.getElementById('catBreed').value;
-            const phone = document.getElementById('catPhone').value;
-            const detail = document.getElementById('catDetail').value;
-            const imageFile = document.getElementById('catImage').files[0];
-            const btn = document.getElementById('btnSubmit');
+      const fetchCats = async () => {
+        setLoadingData(true);
+        try {
+          const res = await fetch(SCRIPT_URL);
+          const data = await res.json();
+          if (data && data.length > 0) setCats(data);
+        } catch(e) { console.log("ใช้ mock data:", e); }
+        setLoadingData(false);
+      };
 
-            if (!name || !phone || !imageFile) {
-                alert("กรุณากรอกชื่อ เบอร์โทร และเลือกรูปภาพครับ");
-                return;
-            }
+      useEffect(() => { fetchCats(); }, []);
 
-            btn.disabled = true;
-            btn.innerText = "กำลังอัพโหลด...";
+      const handleSubmit = async (form) => {
+        setSubmitting(true);
+        try {
+          await fetch(SCRIPT_URL, { method:"POST", body: JSON.stringify(form) });
+          notify("📨 ส่งข้อมูลแล้ว! รอแอดมินตรวจสอบ", "#FF9800");
+          setShowForm(false);
+          setTimeout(fetchCats, 2000);
+        } catch(e) { notify("❌ เกิดข้อผิดพลาด ลองใหม่อีกครั้ง", "#FF6B6B"); }
+        setSubmitting(false);
+      };
 
-            try {
-                // 1. อัพโหลดรูปลง Firebase Storage
-                const storageRef = storage.ref('cats/' + Date.now() + "_" + imageFile.name);
-                const uploadTask = await storageRef.put(imageFile);
-                const imageUrl = await uploadTask.ref.getDownloadURL();
+      const approvedCats = cats.filter(c => c.approved==="TRUE" || c.approved===true);
+      const pendingCats  = cats.filter(c => c.approved!=="TRUE" && c.approved!==true);
+      const publicList   = approvedCats.filter(c => {
+        const mf = filter==="ทั้งหมด" || c.type===filter;
+        const ms = !search || (c.breed||"").includes(search)||(c.location||"").includes(search)||(c.features||"").includes(search);
+        return mf && ms;
+      });
 
-                // 2. บันทึกข้อมูลลง Firestore
-                await db.collection("cats").add({
-                    name: name,
-                    breed: breed,
-                    phone: phone,
-                    detail: detail,
-                    imageUrl: imageUrl,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                });
+      const approve = cat => { setCats(cs=>cs.map(c=>c.id===cat.id?{...c,approved:"TRUE"}:c)); notify("✅ อนุมัติแล้ว — อย่าลืมแก้ใน Google Sheets ด้วยนะครับ"); };
+      const reject  = cat => { setCats(cs=>cs.filter(c=>c.id!==cat.id)); notify("🗑 ลบรายการแล้ว","#FF6B6B"); };
+      const loginAdmin = () => { if(adminPass==="admin1234"){setAdminAuthed(true);setPage("admin");setAdminPass("");}else alert("รหัสผ่านไม่ถูกต้อง"); };
 
-                alert("ลงประกาศสำเร็จแล้ว!");
-                document.getElementById('postModal').style.display = 'none';
-                // ล้างค่าในฟอร์ม
-                document.getElementById('catName').value = '';
-                document.getElementById('catImage').value = '';
-            } catch (error) {
-                console.error(error);
-                alert("เกิดข้อผิดพลาด: " + error.message);
-            } finally {
-                btn.disabled = false;
-                btn.innerText = "บันทึกประกาศ";
-            }
-        }
+      const NAV_H = 64;
+      const btnNav = (active) => ({ padding:"7px 16px", borderRadius:20, border:"none", background:active?"#FF6B6B":"transparent", color:active?"#fff":"#555", fontWeight:700, cursor:"pointer", fontFamily:"Sarabun,sans-serif", fontSize:14 });
 
-        // เริ่มโหลดข้อมูลเมื่อเปิดเว็บ
-        loadCats();
-    </script>
+      return (
+        <div style={{ minHeight:"100vh", background:"#faf8f5" }}>
+          {toast && <div style={{ position:"fixed", top:80, right:20, background:toast.color, color:"#fff", padding:"12px 20px", borderRadius:12, fontWeight:700, zIndex:9999, boxShadow:"0 4px 20px rgba(0,0,0,0.15)" }}>{toast.msg}</div>}
+
+          {/* NAV */}
+          <nav style={{ position:"fixed", top:0, left:0, right:0, height:NAV_H, background:"#fff", borderBottom:"1.5px solid #f0ece4", display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0 20px", zIndex:100, boxShadow:"0 2px 12px rgba(0,0,0,0.05)" }}>
+            <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+              <span style={{ fontSize:26 }}>🐾</span>
+              <span style={{ fontWeight:800, fontSize:18, color:"#2d2d2d" }}>แมวหาย<span style={{ color:"#FF6B6B" }}>·</span>แมวหลง</span>
+            </div>
+            <div style={{ display:"flex", gap:6, alignItems:"center" }}>
+              <button style={btnNav(page==="home")} onClick={()=>setPage("home")}>🏠 หน้าแรก</button>
+              <button style={{...btnNav(page==="admin"), background:page==="admin"?"#4ECDC4":"transparent", color:page==="admin"?"#fff":"#555"}} onClick={()=>adminAuthed?setPage("admin"):setPage("login")}>
+                {adminAuthed?"⚙️ Admin":"🔐 Admin"}
+                {pendingCats.length>0&&adminAuthed&&<span style={{ marginLeft:6, background:"#FF6B6B", color:"#fff", borderRadius:10, padding:"1px 7px", fontSize:11 }}>{pendingCats.length}</span>}
+              </button>
+              <button onClick={()=>setShowForm(true)} style={{ padding:"8px 16px", borderRadius:20, border:"none", background:"linear-gradient(135deg,#FF6B6B,#FF8E53)", color:"#fff", fontWeight:700, cursor:"pointer", fontFamily:"Sarabun,sans-serif", fontSize:14, boxShadow:"0 4px 14px rgba(255,107,107,0.35)" }}>+ แจ้งแมว</button>
+            </div>
+          </nav>
+
+          <div style={{ maxWidth:1200, margin:"0 auto", padding:`${NAV_H+24}px 16px 40px` }}>
+
+            {/* HOME */}
+            {page==="home" && <>
+              <div style={{ textAlign:"center", padding:"28px 0 24px" }}>
+                <div style={{ fontSize:48 }}>🐱</div>
+                <h1 style={{ margin:"8px 0", fontSize:"clamp(24px,5vw,40px)", color:"#2d2d2d" }}>ช่วยกันตามหา<span style={{ color:"#FF6B6B" }}>น้องแมว</span></h1>
+                <p style={{ color:"#888", fontSize:15, margin:"0 0 20px" }}>รวมประกาศแมวหายและแมวหลงทั่วกรุงเทพฯ</p>
+                <div style={{ display:"flex", justifyContent:"center", gap:16, flexWrap:"wrap" }}>
+                  {[{label:"แมวหาย",val:approvedCats.filter(c=>c.type==="หาย").length,color:"#FF6B6B"},{label:"แมวหลง",val:approvedCats.filter(c=>c.type==="หลง").length,color:"#4ECDC4"},{label:"ทั้งหมด",val:approvedCats.length,color:"#FFA500"}].map(s=>(
+                    <div key={s.label} style={{ background:"#fff", borderRadius:16, padding:"10px 20px", boxShadow:"0 2px 12px rgba(0,0,0,0.07)" }}>
+                      <div style={{ fontSize:26, fontWeight:800, color:s.color }}>{s.val}</div>
+                      <div style={{ fontSize:12, color:"#888" }}>{s.label}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ display:"flex", gap:8, marginBottom:20, flexWrap:"wrap", alignItems:"center" }}>
+                {["ทั้งหมด","หาย","หลง"].map(f=>(
+                  <button key={f} onClick={()=>setFilter(f)} style={{ padding:"7px 16px", borderRadius:20, border:`2px solid ${filter===f?(f==="หาย"?"#FF6B6B":f==="หลง"?"#4ECDC4":"#2d2d2d"):"#e0e0e0"}`, background:filter===f?(f==="หาย"?"#FF6B6B":f==="หลง"?"#4ECDC4":"#2d2d2d"):"#fff", color:filter===f?"#fff":"#555", fontWeight:700, cursor:"pointer", fontFamily:"Sarabun,sans-serif" }}>
+                    {f==="ทั้งหมด"?"🐾 ทั้งหมด":f==="หาย"?"😿 แมวหาย":"🐟 แมวหลง"}
+                  </button>
+                ))}
+                <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="🔍 ค้นหา..." style={{ flex:1, minWidth:160, padding:"8px 14px", borderRadius:20, border:"1.5px solid #e0e0e0", fontSize:14, outline:"none", fontFamily:"Sarabun,sans-serif" }} />
+                <button onClick={fetchCats} style={{ padding:"8px 12px", borderRadius:20, border:"1.5px solid #e0e0e0", background:"#fff", cursor:"pointer", fontSize:16 }}>{loadingData?"⏳":"🔄"}</button>
+              </div>
+
+              {loadingData ? <div style={{ textAlign:"center", padding:60, color:"#aaa", fontSize:18 }}>⏳ กำลังโหลด...</div>
+              : publicList.length===0 ? <div style={{ textAlign:"center", padding:60, color:"#bbb" }}><div style={{ fontSize:48 }}>😿</div><div>ไม่พบรายการที่ตรงกัน</div></div>
+              : <div className="card-grid">{publicList.map((cat,i)=><CatCard key={cat.id||i} cat={cat} />)}</div>}
+            </>}
+
+            {/* LOGIN */}
+            {page==="login" && (
+              <div style={{ display:"flex", justifyContent:"center", alignItems:"center", minHeight:"60vh" }}>
+                <div style={{ background:"#fff", borderRadius:24, padding:36, width:"min(360px,95vw)", boxShadow:"0 8px 40px rgba(0,0,0,0.1)", textAlign:"center" }}>
+                  <div style={{ fontSize:44 }}>🔐</div>
+                  <h2 style={{ margin:"12px 0 4px" }}>Admin Login</h2>
+                  <p style={{ color:"#aaa", fontSize:13, margin:"0 0 20px" }}>รหัสทดสอบ: admin1234</p>
+                  <input type="password" value={adminPass} onChange={e=>setAdminPass(e.target.value)} onKeyDown={e=>e.key==="Enter"&&loginAdmin()} placeholder="รหัสผ่าน" style={{ width:"100%", padding:"11px 14px", borderRadius:10, border:"1.5px solid #e0e0e0", fontSize:15, outline:"none", marginBottom:10, fontFamily:"Sarabun,sans-serif" }} />
+                  <button onClick={loginAdmin} style={{ width:"100%", padding:12, borderRadius:10, border:"none", background:"#4ECDC4", color:"#fff", fontWeight:700, fontSize:15, cursor:"pointer", fontFamily:"Sarabun,sans-serif" }}>เข้าสู่ระบบ</button>
+                </div>
+              </div>
+            )}
+
+            {/* ADMIN */}
+            {page==="admin" && adminAuthed && <>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20, flexWrap:"wrap", gap:10 }}>
+                <div>
+                  <h2 style={{ margin:"0 0 4px", fontSize:26 }}>⚙️ Admin Dashboard</h2>
+                  <p style={{ margin:0, color:"#888" }}>จัดการรายการแมวหาย-แมวหลง</p>
+                </div>
+                <div style={{ display:"flex", gap:8 }}>
+                  <button onClick={fetchCats} style={{ padding:"8px 14px", borderRadius:20, border:"1.5px solid #4ECDC4", color:"#4ECDC4", background:"#fff", fontWeight:700, cursor:"pointer", fontFamily:"Sarabun,sans-serif" }}>🔄 รีเฟรช</button>
+                  <button onClick={()=>{setAdminAuthed(false);setPage("home");}} style={{ padding:"8px 14px", borderRadius:20, border:"1.5px solid #FF6B6B", color:"#FF6B6B", background:"#fff", fontWeight:700, cursor:"pointer", fontFamily:"Sarabun,sans-serif" }}>ออกจากระบบ</button>
+                </div>
+              </div>
+
+              <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(140px,1fr))", gap:12, marginBottom:24 }}>
+                {[{icon:"📋",label:"ทั้งหมด",val:cats.length,color:"#6C63FF"},{icon:"✅",label:"อนุมัติแล้ว",val:approvedCats.length,color:"#4CAF50"},{icon:"⏳",label:"รอตรวจสอบ",val:pendingCats.length,color:"#FFA500"},{icon:"😿",label:"แมวหาย",val:cats.filter(c=>c.type==="หาย").length,color:"#FF6B6B"},{icon:"🐾",label:"แมวหลง",val:cats.filter(c=>c.type==="หลง").length,color:"#4ECDC4"}].map(s=>(
+                  <div key={s.label} style={{ background:"#fff", borderRadius:14, padding:"14px 16px", boxShadow:"0 2px 12px rgba(0,0,0,0.07)", borderLeft:`4px solid ${s.color}` }}>
+                    <div style={{ fontSize:20 }}>{s.icon}</div>
+                    <div style={{ fontSize:26, fontWeight:800, color:s.color }}>{s.val}</div>
+                    <div style={{ fontSize:12, color:"#888" }}>{s.label}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ background:"linear-gradient(135deg,#667eea,#764ba2)", color:"#fff", borderRadius:14, padding:"12px 18px", marginBottom:24, fontSize:13, lineHeight:1.8 }}>
+                💡 <b>วิธีอนุมัติถาวร:</b> กดปุ่ม ✓ แล้วไปแก้ใน Google Sheets คอลัมน์ <b>approved</b> เป็น <b>TRUE</b> ด้วยนะครับ
+              </div>
+
+              {pendingCats.length>0 && <>
+                <h3 style={{ margin:"0 0 12px", color:"#FFA500" }}>⏳ รอการอนุมัติ ({pendingCats.length})</h3>
+                <div className="card-grid" style={{ marginBottom:28 }}>{pendingCats.map((cat,i)=><CatCard key={cat.id||i} cat={cat} onApprove={approve} onReject={reject} adminMode />)}</div>
+              </>}
+
+              <h3 style={{ margin:"0 0 12px", color:"#4CAF50" }}>✅ อนุมัติแล้ว ({approvedCats.length})</h3>
+              <div className="card-grid">{approvedCats.map((cat,i)=><CatCard key={cat.id||i} cat={cat} onApprove={approve} onReject={reject} adminMode />)}</div>
+            </>}
+          </div>
+
+          {showForm && <SubmitForm onSubmit={handleSubmit} onClose={()=>setShowForm(false)} loading={submitting} />}
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
 </body>
 </html>
